@@ -1,0 +1,105 @@
+﻿@using CodingTest.Models;
+@using Microsoft.AspNetCore.Mvc;
+@using Microsoft.AspNetCore.Mvc.ViewFeatures;
+@model CodingTest.Models.Location
+@using System.Diagnostics;
+@using System.Text;
+
+@{
+    ViewData["Title"] = "Recursion Index";
+}
+
+
+@functions
+{
+int ndx = 1;
+TagBuilder Parent = new TagBuilder("parent");
+
+TagBuilder Child = new TagBuilder("child");
+TagBuilder Root = new TagBuilder("root");
+TagBuilder SaveParent = new TagBuilder("parent");
+bool isChildrenLocationsComplete = false;
+int ParentCntr = 0;
+int ChildCntr = 0;
+TagBuilder MainNode = new TagBuilder("parent");
+
+
+public TagBuilder RecursiveMethod(Location location, List<Location> children, bool boolval)
+{
+    if (boolval)
+    {
+        Parent = new TagBuilder(location.Name.Replace(" ", ""));
+        Parent.Attributes.Add("class", "indentlength linebreak");
+        Parent.InnerHtml.AppendHtml(location.Name);
+
+        MainNode = new TagBuilder(location.Name.Replace(" ", ""));
+        MainNode.Attributes.Add("class", "indentlength linebreak");
+        MainNode.InnerHtml.AppendHtml(location.Name);
+    }
+
+    int ChildCntr = 0;
+
+    foreach (var nn in children)
+    {
+        if (MainNode.TagName == location.Name)
+        {
+            Parent = MainNode;
+            ChildCntr = 0;
+            ParentCntr = 0;
+        }
+
+        Child = new TagBuilder(nn.Name.Replace(" ", ""));
+        Child.Attributes.Add("class", "indentlength linebreak");
+        Child.InnerHtml.AppendHtml($"{nn.Name}");
+
+        Parent.InnerHtml.AppendHtml(Child);
+
+        // Parent reference added to Root TagBuilder.
+        if (!Root.HasInnerHtml)
+        {
+            Root.InnerHtml.AppendHtml(Parent);
+        }
+
+        if (children.Count > 1 && isChildrenLocationsComplete == false)
+        {
+            if (!SaveParent.HasInnerHtml)
+            {
+                SaveParent = Parent;
+                ParentCntr++;
+            }
+        }
+
+        if (nn.ChildrenLocations.Count > 0)
+        {
+            if (ChildCntr < nn.ChildrenLocations.Count)
+            {
+                SaveParent = Parent;
+                Parent = Child;
+                ChildCntr++;
+                RecursiveMethod(nn, nn.ChildrenLocations, false);
+                isChildrenLocationsComplete = true;
+                ChildCntr--;
+            }
+        }
+
+        if (ParentCntr < children.Count && isChildrenLocationsComplete)
+        {
+            Parent = SaveParent;
+            ParentCntr++;
+            isChildrenLocationsComplete = false;
+        }
+    }
+
+    return Root;
+}
+}
+
+<div class="text-left" id="locations">
+
+    @{
+        TagBuilder hhh = RecursiveMethod(Model, Model.ChildrenLocations, true);
+    }
+
+    @hhh
+
+</div>

@@ -1,0 +1,65 @@
+﻿@model CodingTest.Models.StudentGradeVM
+@{
+    ViewData["Title"] = "Index";
+}
+
+<h4>Average Grade</h4>
+<p class="gradefont">@ViewData["AverageGrade"]</p>
+
+<br />
+
+<h4>List of Grades and Number of Students</h4>
+<table class="table">
+    <tr>
+        <th>
+            @Html.DisplayNameFor(model => model.LetterGrade)
+        </th>
+        <th>
+            @Html.DisplayNameFor(model => model.Count)
+        </th>
+    </tr>
+    
+    @foreach(var item in Model.LetterGradeCount)
+    {
+    <tr>
+        <td>
+            @Html.DisplayFor(modelItem => item.LetterGrade)
+        </td>
+        <td>
+            @Html.DisplayFor(modelItem => item.Count)
+        </td>
+    </tr>
+    }
+</table>
+
+<br />
+
+<h4>List of Students Ordered By Grades Descending</h4>
+<table class="table">
+    <tr>
+        <th>
+            @Html.DisplayNameFor(model => model.NumberGrade)
+        </th>
+        <th>
+            @Html.DisplayNameFor(model => model.FirstName)
+        </th>
+        <th>
+            @Html.DisplayNameFor(model => model.LastName)
+        </th>
+    </tr>
+
+    @foreach (var item in Model.NumberGradeNameDesc)
+    {
+    <tr>
+        <td>
+            @Html.DisplayFor(modelItem => item.NumberGrade)
+        </td>
+        <td>
+            @Html.DisplayFor(modelItem => item.FirstName)
+        </td>
+        <td>
+            @Html.DisplayFor(modelItem => item.LastName)
+        </td>
+    </tr>
+    }
+</table>

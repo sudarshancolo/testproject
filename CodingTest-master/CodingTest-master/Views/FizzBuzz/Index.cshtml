@@ -1,0 +1,31 @@
+﻿
+@{
+    ViewData["Title"] = "Index";
+}
+
+@{ 
+    IEnumerable<KeyValuePair<int, string>> fbPair = (IEnumerable<KeyValuePair<int, string>>)ViewData["fbPair"];
+}
+
+<table class="table">
+    <tr>
+        <th>
+            @Html.DisplayName("Number");
+        </th>
+        <th>
+            @Html.DisplayName("Value");
+        </th>
+    </tr>
+
+    @foreach (var item in fbPair.ToList())
+    {
+        <tr>
+            <td>
+                @Html.DisplayFor(fb => item.Key)
+            </td>
+            <td>
+                @Html.DisplayFor(fb => item.Value)
+            </td>
+        </tr>
+    }
+</table>
