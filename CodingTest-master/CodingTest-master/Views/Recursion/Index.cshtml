@@ -1,9 +1,6 @@
-﻿@using CodingTest.Models;
-@using Microsoft.AspNetCore.Mvc;
-@using Microsoft.AspNetCore.Mvc.ViewFeatures;
+@using CodingTest.Models;
 @model CodingTest.Models.Location
 @using System.Diagnostics;
-@using System.Text;
 
 @{
     ViewData["Title"] = "Recursion Index";
@@ -12,87 +9,117 @@
 
 @functions
 {
-int ndx = 1;
-TagBuilder Parent = new TagBuilder("parent");
+    int ndx = 0;
+    int ndxRec = 0;
+    string strn = string.Empty;
+    TagBuilder Parent = new TagBuilder("parent");
 
-TagBuilder Child = new TagBuilder("child");
-TagBuilder Root = new TagBuilder("root");
-TagBuilder SaveParent = new TagBuilder("parent");
-bool isChildrenLocationsComplete = false;
-int ParentCntr = 0;
-int ChildCntr = 0;
-TagBuilder MainNode = new TagBuilder("parent");
+    TagBuilder Child = new TagBuilder("child");
+    TagBuilder Root = new TagBuilder("root");
+    TagBuilder MainNode = new TagBuilder("parent");
+    List<KeyValuePair<string, TagBuilder>> taglist = new List<KeyValuePair<string, TagBuilder>>();
 
 
-public TagBuilder RecursiveMethod(Location location, List<Location> children, bool boolval)
-{
-    if (boolval)
+    public TagBuilder RecursiveMethod(Location location, List<Location> children, bool boolval)
     {
-        Parent = new TagBuilder(location.Name.Replace(" ", ""));
-        Parent.Attributes.Add("class", "indentlength linebreak");
-        Parent.InnerHtml.AppendHtml(location.Name);
-
-        MainNode = new TagBuilder(location.Name.Replace(" ", ""));
-        MainNode.Attributes.Add("class", "indentlength linebreak");
-        MainNode.InnerHtml.AppendHtml(location.Name);
-    }
-
-    int ChildCntr = 0;
-
-    foreach (var nn in children)
-    {
-        if (MainNode.TagName == location.Name)
+        if (boolval)
         {
-            Parent = MainNode;
-            ChildCntr = 0;
-            ParentCntr = 0;
+            Parent = new TagBuilder(location.Name.Replace(" ", ""));
+            Parent.Attributes.Add("class", "indentlength linebreak");
+            Parent.GenerateId(location.Name.Replace(" ", "") + ":::" + ndx.ToString(), "");
+            Parent.InnerHtml.AppendHtml(location.Name);
+
+            MainNode = new TagBuilder(location.Name.Replace(" ", ""));
+            MainNode.GenerateId(location.Name.Replace(" ", "") + ":::" + ndx.ToString(), "");
+            MainNode.Attributes.Add("class", "indentlength linebreak");
+            MainNode.InnerHtml.AppendHtml(location.Name);
         }
 
-        Child = new TagBuilder(nn.Name.Replace(" ", ""));
-        Child.Attributes.Add("class", "indentlength linebreak");
-        Child.InnerHtml.AppendHtml($"{nn.Name}");
-
-        Parent.InnerHtml.AppendHtml(Child);
-
-        // Parent reference added to Root TagBuilder.
-        if (!Root.HasInnerHtml)
+        foreach (var nn in children)
         {
-            Root.InnerHtml.AppendHtml(Parent);
-        }
 
-        if (children.Count > 1 && isChildrenLocationsComplete == false)
-        {
-            if (!SaveParent.HasInnerHtml)
+            ndx++;
+            if (MainNode.TagName == location.Name)
             {
-                SaveParent = Parent;
-                ParentCntr++;
+                Parent = MainNode;
+                taglist = new List<KeyValuePair<string, TagBuilder>>();
+
+                // Parent reference added to Root TagBuilder. Once referenced, good for all.
+                if (!Root.HasInnerHtml)
+                    Root.InnerHtml.AppendHtml(Parent);
             }
-        }
 
-        if (nn.ChildrenLocations.Count > 0)
-        {
-            if (ChildCntr < nn.ChildrenLocations.Count)
+
+            Child = new TagBuilder(nn.Name.Replace(" ", ""));
+            Child.Attributes.Add("class", "indentlength linebreak");
+            Child.Attributes.Add("parlocname", location.Name.Replace(" ", ""));
+            Child.Attributes.Add("ndxrec", (ndxRec).ToString());
+            Child.GenerateId(nn.Name.Replace(" ", "") + ":::" + ndx.ToString(), "");
+            if (nn.ChildrenLocations.Count() == 0)
             {
-                SaveParent = Parent;
-                Parent = Child;
-                ChildCntr++;
+                Child.Attributes.Add("chilocname", "NotAParent");
+            }
+            else
+            {
+                Child.Attributes.Add("chilocname", nn.Name.Replace(" ", ""));
+            }
+
+            Child.InnerHtml.AppendHtml($"{nn.Name}");
+            
+            taglist.Add(new KeyValuePair<string, TagBuilder>(nn.Name.Replace(" ", "") + ":::" + ndx.ToString(), Child));
+
+            if (taglist.Count > 0)
+            {
+                var taglistReversed = taglist.Select(x => new KeyValuePair<string, TagBuilder>(x.Key, x.Value)).Select(y => y.Value).Reverse();
+
+                if (ndx == 1)
+                {
+                    Parent.InnerHtml.AppendHtml(Child);
+                    if (!Root.HasInnerHtml)
+                        Root.InnerHtml.AppendHtml(Parent);
+                }
+                else
+                {
+                    foreach (var tag in taglistReversed)
+                    {
+                        // returns NorthAmerica
+                        var cln = tag.Attributes.ToList().Where(x => x.Key == "chilocname").Select(y => y.Value).FirstOrDefault();
+                        var tagIndx = tag.Attributes.ToList().Where(x => x.Key == "ndxrec").Select(y => y.Value).FirstOrDefault();
+                        var chIndx = Child.Attributes.ToList().Where(x => x.Key == "ndxrec").Select(y => y.Value).FirstOrDefault();
+
+                        if (MainNode.TagName == location.Name)
+                        {
+                            Parent.InnerHtml.AppendHtml(Child);
+
+                        }
+                        else if (cln == location.Name.Replace(" ", ""))
+                        {
+                            if (Convert.ToInt32(chIndx) - 1 != Convert.ToInt32(tagIndx))
+                                continue;
+                            Parent = new TagBuilder(location.Name.Replace(" ", ""));
+                            Parent = tag;
+                            Parent.InnerHtml.AppendHtml(Child);
+                            if (!Root.HasInnerHtml)
+                                Root.InnerHtml.AppendHtml(Parent);
+                            break;
+                        }
+                    }
+                }
+            }
+
+            if (children.Count > 0)
+            {
+                ndxRec++;
                 RecursiveMethod(nn, nn.ChildrenLocations, false);
-                isChildrenLocationsComplete = true;
-                ChildCntr--;
+                ndxRec--;
             }
         }
 
-        if (ParentCntr < children.Count && isChildrenLocationsComplete)
-        {
-            Parent = SaveParent;
-            ParentCntr++;
-            isChildrenLocationsComplete = false;
-        }
+        return Root;
     }
+        }
 
-    return Root;
-}
-}
+
 
 <div class="text-left" id="locations">
 
